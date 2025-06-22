@@ -21,6 +21,26 @@ from Crypto.Cipher import AES
 from Crypto.Util.Padding import unpad
 from base64 import b64decode
 
+
+def resolve_classplus_url_if_detected(text):
+    import re
+    match = re.search(r"https?://[^\s]+classplusapp\.com[^\s]+", text)
+    if not match:
+        return None  # Classplus link nahi mila
+
+    original_url = match.group(0)
+
+    api = f"https://ugxclassplusapi.vercel.app/get/cp/dl?url={original_url}"
+    try:
+        res = requests.get(api, timeout=10).json()
+        if res.get("status") and res["data"].get("video_url"):
+            return res["data"]["video_url"]
+        else:
+            return None
+    except Exception as e:
+        print("API Error:", e)
+        return None
+
 def duration(filename):
     result = subprocess.run(["ffprobe", "-v", "error", "-show_entries",
                              "format=duration", "-of",
